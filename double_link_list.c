@@ -1,151 +1,306 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include<stdio.h>
+#include<stdlib.h>
 
-// node creation
-struct Node {
+struct Node
+{
   int data;
-  struct Node* next;
-  struct Node* prev;
+  struct Node *next;
+  struct Node *prev;
 };
 
-// insert node at the front
-void insertFront(struct Node** head, int data) {
-  // allocate memory for newNode
-  struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+int getLength (struct Node *node);
 
-  // assign data to newNode
+void insertStart (struct Node **head, int data)
+{
+
+  struct Node *newNode = (struct Node *) malloc (sizeof (struct Node));
+
   newNode->data = data;
-
-  // make newNode as a head
-  newNode->next = (*head);
-
-  // assign null to prev
+  newNode->next = *head;
   newNode->prev = NULL;
 
-  // previous of head (now head is the second node) is newNode
-  if ((*head) != NULL)
+  //If the linked list already had atleast 1 node
+  if (*head != NULL)
     (*head)->prev = newNode;
+  // *head->prev = newNode; would not work it has (*head) must be used
 
-  // head points to newNode
-  (*head) = newNode;
+
+  //changing the new head to this freshly entered node
+  *head = newNode;
 }
 
-// insert a node after a specific node
-void insertAfter(struct Node* prev_node, int data) {
-  // check if previous node is null
-  if (prev_node == NULL) {
-    printf("previous node cannot be null");
-    return;
-  }
+void insertLast (struct Node **head, int data)
+{
 
-  // allocate memory for newNode
-  struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+  struct Node *newNode = (struct Node *) malloc (sizeof (struct Node));
 
-  // assign data to newNode
   newNode->data = data;
-
-  // set next of newNode to next of prev node
-  newNode->next = prev_node->next;
-
-  // set next of prev node to newNode
-  prev_node->next = newNode;
-
-  // set prev of newNode to the previous node
-  newNode->prev = prev_node;
-
-  // set prev of newNode's next to newNode
-  if (newNode->next != NULL)
-    newNode->next->prev = newNode;
-}
-
-// insert a newNode at the end of the list
-void insertEnd(struct Node** head, int data) {
-  // allocate memory for node
-  struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
-
-  // assign data to newNode
-  newNode->data = data;
-
-  // assign null to next of newNode
   newNode->next = NULL;
 
-  // store the head node temporarily (for later use)
-  struct Node* temp = *head;
+  //need this if there is no node present in linked list at all
+  if (*head == NULL)
+    {
+      *head = newNode;
+      newNode->prev = NULL;
+      return;
+    }
 
-  // if the linked list is empty, make the newNode as head node
-  if (*head == NULL) {
-    newNode->prev = NULL;
-    *head = newNode;
-    return;
-  }
+  struct Node *temp = *head;
 
-  // if the linked list is not empty, traverse to the end of the linked list
   while (temp->next != NULL)
     temp = temp->next;
 
-  // now, the last node of the linked list is temp
-
-  // assign next of the last node (temp) to newNode
   temp->next = newNode;
-
-  // assign prev of newNode to temp
   newNode->prev = temp;
 }
 
-// delete a node from the doubly linked list
-void deleteNode(struct Node** head, struct Node* del_node) {
-  // if head or del is null, deletion is not possible
-  if (*head == NULL || del_node == NULL)
-    return;
+void insertPosition (struct Node **head, int n, int data)
+{
+  int len = getLength (*head);
 
-  // if del_node is the head node, point the head pointer to the next of del_node
-  if (*head == del_node)
-    *head = del_node->next;
+  // if insertion has to happen at start
+  if (n == 0)
+    {
+      insertStart (head, data);
+      return;
+    }
+  // if insertion has to happen at end
+  if (n == len)
+    {
+      insertLast (head, data);
+      return;
+    }
 
-  // if del_node is not at the last node, point the prev of node next to del_node to the previous of del_node
-  if (del_node->next != NULL)
-    del_node->next->prev = del_node->prev;
+  // other wise if insertion needs to happen in the middle
 
-  // if del_node is not the first node, point the next of the previous node to the next node of del_node
-  if (del_node->prev != NULL)
-    del_node->prev->next = del_node->next;
+  // if position to enter after is greater than size of List
+  // if position to enter is negative, we can't insert
+  if (n < 0 || n > len)
+    printf ("Invalid position to insert\n");
 
-  // free the memory of del_node
-  free(del_node);
+  else
+    {
+      struct Node *newNode = (struct Node *) malloc (sizeof (struct Node));
+      newNode->data = data;
+      newNode->next = NULL;
+      newNode->prev = NULL;
+
+      // temp used to traverse the Linked List
+      struct Node *temp = *head;
+
+      // traverse till the nth node
+      while (--n)
+	temp = temp->next;
+
+      // assigning (n+1)th node's previous to this new node
+      (temp->next)->prev = newNode;
+
+      // newNode's next assigned to (n+1)th node
+      // newNode's previous assigned to nth node
+      newNode->next = temp->next;
+      newNode->prev = temp;
+
+      // assign nth node's next to newNode
+      temp->next = newNode;
+    }
 }
 
-// print the doubly linked list
-void displayList(struct Node* node) {
-  struct Node* last;
+// required for insertAfter
+int getLength (struct Node *node)
+{
+  int len = 0;
 
-  while (node != NULL) {
-    printf("%d->", node->data);
-    last = node;
-    node = node->next;
-  }
-  if (node == NULL)
-    printf("NULL\n");
+  while (node != NULL)
+    {
+      node = node->next;
+      len++;
+    }
+  return len;
 }
 
-int main() {
-  // initialize an empty node
-  struct Node* head = NULL;
+void deleteStart (struct Node **head)
+{
+  struct Node *temp = *head;
 
-  insertEnd(&head, 5);
-  insertFront(&head, 1);
-  insertFront(&head, 6);
-  insertEnd(&head, 9);
+  // if DLL is empty
+  if (*head == NULL)
+    {
+      printf ("Linked List Empty, nothing to delete\n\n");
+      return;
+    }
 
-  // insert 11 after head
-  insertAfter(head, 11);
+  // if Linked List has only 1 node
+  if (temp->next == NULL)
+    {
+      printf ("%d deleted\n\n", temp->data);
+      *head = NULL;
+      return;
+    }
 
-  // insert 15 after the seond node
-  insertAfter(head->next, 15);
+  // move head to next node
+  *head = (*head)->next;
+  // assign head node's previous to NULL
+  (*head)->prev = NULL;
 
-  displayList(head);
-
-  // delete the last node
-  deleteNode(&head, head->next->next->next->next->next);
-
-  displayList(head);
+  printf ("%d deleted\n\n", temp->data);
+  free (temp);
 }
+
+void deleteLast (struct Node **head)
+{
+  struct Node *temp = *head;
+
+  // if DLL is empty
+  if (*head == NULL)
+    {
+      printf ("Linked List Empty, nothing to delete\n\n");
+      return;
+    }
+
+  // if Linked List has only 1 node
+  if (temp->next == NULL)
+    {
+      printf ("%d deleted\n\n", temp->data);
+      *head = NULL;
+      return;
+    }
+
+  // else traverse to the last node
+  while (temp->next != NULL)
+    temp = temp->next;
+
+  struct Node *secondLast = temp->prev;
+
+  // Curr assign 2nd last node's next to Null
+  secondLast->next = NULL;
+
+  printf ("%d deleted\n\n", temp->data);
+  free (temp);
+}
+
+void deleteNthNode (struct Node **head, int n)
+{
+  //if the head node itself needs to be deleted
+  int len = getLength (*head);
+
+  // not valid
+  if (n < 1 || n > len)
+    {
+      printf ("Enter valid position\n\n");
+      return;
+    }
+
+  // delete the first node
+  if (n == 1)
+    {
+      deleteStart (head);
+      return;
+    }
+
+  if (n == len)
+    {
+      deleteLast (head);
+      return;
+    }
+
+  struct Node *temp = *head;
+
+  // traverse to the nth node
+  while (--n)
+    {
+      temp = temp->next;
+    }
+
+  struct Node *previousNode = temp->prev;	// (n-1)th node
+  struct Node *nextNode = temp->next;	// (n+1)th node
+
+  // assigning (n-1)th node's next pointer to (n+1)th node
+  previousNode->next = temp->next;
+
+  // assigning (n+1)th node's previous pointer to (n-1)th node
+  nextNode->prev = temp->prev;
+
+  // deleting nth node
+  printf ("%d deleted \n\n", temp->data);
+  free (temp);
+}
+
+
+
+//function to print the doubly linked list
+void display (struct Node *node)
+{
+  struct Node *end = NULL;
+  printf("Linked List:");
+  while (node != NULL)
+    {
+      printf (" %d ", node->data);
+      end = node;
+      node = node->next;
+    }
+
+  printf ("\n\n");
+}
+
+int main ()
+{
+  struct Node *head = NULL;
+  
+  insertStart (&head, 23);
+  insertStart (&head, 990);
+  display(head);
+
+  insertLast (&head, 40);
+  insertLast (&head, 60);
+  insertLast (&head, 80);
+  display(head);
+
+  // 500 to be entered after 3rd node
+  insertPosition (&head, 3, 5980);
+
+  // & not required to be passed as head will not change
+  display (head);
+
+  printf ("Linked List After Deletion From Beginning\n\n");
+  deleteStart (&head);
+  display (head);
+
+  printf ("Linked List After Deletion From Last\n\n");
+  deleteLast (&head);
+  display (head);
+
+  // delete 3rd node
+  printf ("Linked List After Deletion From 3rd Position\n\n");
+  deleteNthNode (&head, 3);
+  display (head);
+
+  return 0;
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
