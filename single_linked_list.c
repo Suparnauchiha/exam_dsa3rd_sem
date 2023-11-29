@@ -1,153 +1,232 @@
-// Linked list operations in C
+#include<stdio.h>
+#include<stdlib.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-
-// Create a node
-struct Node {
+struct Node
+{
   int data;
-  struct Node* next;
+  struct Node *next;
 };
 
-// Insert at the beginning
-void insertAtBeginning(struct Node** head_ref, int new_data) {
-  // Allocate memory to a node
-  struct Node* new_node = (struct Node*)malloc(sizeof(struct Node));
+void insertStart (struct Node **head, int data)
+{
 
-  // insert the data
-  new_node->data = new_data;
+  // dynamically create memory for this newNode
+  struct Node *newNode = (struct Node *) malloc (sizeof (struct Node));
 
-  new_node->next = (*head_ref);
+  // assign data value
+  newNode->data = data;
+  // change the next node of this newNode 
+  // to current head of Linked List
+  newNode->next = *head;
 
-  // Move head to new node
-  (*head_ref) = new_node;
+  //re-assign head to this newNode
+  *head = newNode;
 }
 
-// Insert a node after a node
-void insertAfter(struct Node* prev_node, int new_data) {
-  if (prev_node == NULL) {
-  printf("the given previous node cannot be NULL");
-  return;
-  }
+void insertEnd (struct Node **head, int data)
+{
 
-  struct Node* new_node = (struct Node*)malloc(sizeof(struct Node));
-  new_node->data = new_data;
-  new_node->next = prev_node->next;
-  prev_node->next = new_node;
+  struct Node *newNode = (struct Node *) malloc (sizeof (struct Node));
+
+  newNode->data = data;
+  // since this will be the last node so it will point to NULL
+  newNode->next = NULL;
+
+  // if the Linked List is empty this is the first node being entered
+  if (*head == NULL)
+    {
+      *head = newNode;
+      return;
+    }
+
+  // create another variable to traverse the LL
+  // *head should not be used as we do not want to change head
+  struct Node *temp = *head;
+
+  // traverse to the last node of Linked List
+  while (temp->next != NULL)
+    temp = temp->next;
+
+  // assign last node's next to this newNode
+  temp->next = newNode;
 }
 
-// Insert the the end
-void insertAtEnd(struct Node** head_ref, int new_data) {
-  struct Node* new_node = (struct Node*)malloc(sizeof(struct Node));
-  struct Node* last = *head_ref; /* used in step 5*/
+int getCurrSize (struct Node *node)
+{
+  int size = 0;
 
-  new_node->data = new_data;
-  new_node->next = NULL;
-
-  if (*head_ref == NULL) {
-  *head_ref = new_node;
-  return;
-  }
-
-  while (last->next != NULL) last = last->next;
-
-  last->next = new_node;
-  return;
+  while (node != NULL)
+    {
+      node = node->next;
+      size++;
+    }
+  return size;
 }
 
-// Delete a node
-void deleteNode(struct Node** head_ref, int key) {
-  struct Node *temp = *head_ref, *prev;
+void insertPosition (int pos, int data, struct Node **head)
+{
+  int size = getCurrSize (*head);
 
-  if (temp != NULL && temp->data == key) {
-  *head_ref = temp->next;
-  free(temp);
-  return;
-  }
-  // Find the key to be deleted
-  while (temp != NULL && temp->data != key) {
-  prev = temp;
-  temp = temp->next;
-  }
+  // Can only insert after 1st position
+  // Can't insert if position to insert is greater than size of Linked List
+  if (pos < 1 || pos > size)
+    printf ("Invalid position to insert");
 
-  // If the key is not present
-  if (temp == NULL) return;
+  else
+    {
+      struct Node *newNode = (struct Node *) malloc (sizeof (struct Node));
+      newNode->data = data;
+      newNode->next = NULL;
 
-  // Remove the node
-  prev->next = temp->next;
+      // temp used to traverse the Linked List
+      struct Node *temp = *head;
 
-  free(temp);
+      // traverse till the nth node
+      while (--pos)
+	temp = temp->next;
+
+      // assign newNode's next to nth node's next
+      newNode->next = temp->next;
+      // assign nth node's next to this new node
+      temp->next = newNode;
+      // newNode inserted b/w 3rd and 4th node
+    }
 }
 
-// Search a node
-int searchNode(struct Node** head_ref, int key) {
-  struct Node* current = *head_ref;
 
-  while (current != NULL) {
-  if (current->data == key) return 1;
-  current = current->next;
-  }
+void deleteStart (struct Node **head)
+{
+  struct Node *temp = *head;
+
+  // if there are no nodes in Linked List can't delete
+  if (*head == NULL)
+    {
+      printf ("Linked List Empty, nothing to delete");
+      return;
+    }
+
+  // move head to next node
+  *head = (*head)->next;
+  free (temp);
+}
+
+void deleteEnd (struct Node **head)
+{
+  struct Node *temp = *head;
+  struct Node *previous;
+
+  // if there are no nodes in Linked List can't delete
+  if (*head == NULL)
+    {
+      printf ("Linked List Empty, nothing to delete");
+      return;
+    }
+
+  // if Linked List has only 1 node
+  if (temp->next == NULL)
+    {
+      *head = NULL;
+      return;
+    }
+
+  // else traverse to the last node
+  while (temp->next != NULL)
+    {
+      // store previous link node as we need to change its next val
+      previous = temp;
+      temp = temp->next;
+    }
+  // Curr assign 2nd last node's next to Null
+  previous->next = NULL;
+  // delete the last node
+  free (temp);
+  // 2nd last now becomes the last node
+}
+
+// to delete nth node
+void deletePosition (struct Node **head, int pos)
+{
+  struct Node *temp = *head;
+  struct Node *previous;
+
+  //if the head node itself needs to be deleted
+  int size = getCurrSize (*head);
+
+  // not valid
+  if (pos < 1 || pos > size)
+    {
+      printf ("Enter valid position\n");
+      return;
+    }
+
+  // delete the first node
+  if (pos == 1)
+    {
+      deleteStart (head);
+      return;
+    }
+
+  // traverse to the nth node
+  while (--pos)
+    {
+      // store previous link node as we need to change its next val
+      previous = temp;
+      temp = temp->next;
+    }
+  // change previous node's next node to nth node's next node
+  previous->next = temp->next;
+  // delete this nth node
+  free (temp);
+}
+
+void display (struct Node *node)
+{
+
+  // as linked list will end when Node is Null
+  while (node != NULL)
+    {
+      printf ("%d ", node->data);
+      node = node->next;
+    }
+  printf ("\n");
+}
+
+int main ()
+{
+  struct Node *head = NULL;
+
+// Need '&' i.e. address as we need to change head
+  insertStart (&head, 3);
+  insertStart (&head, 12);
+  insertStart (&head, 111);
+
+  // no need for '&' as head need not be changed
+  // only doing traversal
+  display (head);
+
+  insertEnd (&head, 335);
+  insertEnd (&head, 6);
+  insertEnd (&head, 87);
+
+  display (head);
+
+  //Inserts data: 4 after 3rd position
+  insertPosition (3, 9000, &head);
+  display (head);
+  
+  deleteStart (&head);
+  display (head);
+
+  deleteEnd (&head);
+  display (head);
+
+  // delete 3rd node
+  deletePosition (&head, 3);
+  display (head);
+
+  // delete 1st node
+  deletePosition (&head, 1);
+  display (head);
+
   return 0;
-}
-
-// Sort the linked list
-void sortLinkedList(struct Node** head_ref) {
-  struct Node *current = *head_ref, *index = NULL;
-  int temp;
-
-  if (head_ref == NULL) {
-  return;
-  } else {
-  while (current != NULL) {
-    // index points to the node next to current
-    index = current->next;
-
-    while (index != NULL) {
-    if (current->data > index->data) {
-      temp = current->data;
-      current->data = index->data;
-      index->data = temp;
-    }
-    index = index->next;
-    }
-    current = current->next;
-  }
-  }
-}
-
-// Print the linked list
-void printList(struct Node* node) {
-  while (node != NULL) {
-  printf(" %d ", node->data);
-  node = node->next;
-  }
-}
-
-// Driver program
-int main() {
-  struct Node* head = NULL;
-
-  insertAtEnd(&head, 1);
-  insertAtBeginning(&head, 2);
-  insertAtBeginning(&head, 3);
-  insertAtEnd(&head, 4);
-  insertAfter(head->next, 5);
-
-  printf("Linked list: ");
-  printList(head);
-
-  printf("\nAfter deleting an element: ");
-  deleteNode(&head, 3);
-  printList(head);
-
-  int item_to_find = 3;
-  if (searchNode(&head, item_to_find)) {
-  printf("\n%d is found", item_to_find);
-  } else {
-  printf("\n%d is not found", item_to_find);
-  }
-
-  sortLinkedList(&head);
-  printf("\nSorted List: ");
-  printList(head);
 }
